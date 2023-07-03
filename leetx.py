@@ -103,6 +103,7 @@ class LeetxParser(HTMLParser):
         # and clean the object's state.
         elif self.inside_tbody and tag == self.TR:
             self.current_result['leech'] = self.current_result['leeches']
+            self.current_result['size'] = self.current_result['size'].replace(",","")
             prettyPrinter(self.current_result)
             self.current_result = {}
             self.current_item = None
