@@ -27,6 +27,7 @@
 
 from __future__ import print_function
 import re
+import urllib
 
 # python3 suppport (or python2 fallback, if you will)
 try:
@@ -62,7 +63,9 @@ class LeetxParser(HTMLParser):
         # for torrent name and link
         link = attrs.get('href', '')
         if self.inside_tbody and tag == self.A and link.startswith('/torrent'):  # noqa
-            self.current_result['link'] = LEETX_DOMAIN + link
+            page = retrieve_url(LEETX_DOMAIN + link)
+            magnet_link_match = re.compile(r"href=\"(magnet.+)\" onclick").search(page)
+            self.current_result['link'] = urllib.parse.unquote(magnet_link_match.groups(1)[0])
             self.current_result['desc_link'] = LEETX_DOMAIN + link
             self.current_result['engine_url'] = LEETX_DOMAIN
             self.current_item = 'name'
@@ -125,18 +128,6 @@ class leetx(object):
         'anime': 'Anime',
         'software': 'Apps'
     }
-
-    def download_torrent(self, info):
-        # since 1337x does not provide torrent links in the search results,
-        # we will have to fetch the page and extract the torrent link
-        # and then call the download_file function on it.
-        torrent_page = retrieve_url(info)
-        torrent_link_match = DOWNLOAD_PATTERN.search(torrent_page)
-        if torrent_link_match and torrent_link_match.groups():
-            torrent_file = torrent_link_match.groups()[2].replace("http", "https")  # noqa
-            print(download_file(torrent_file))
-        else:
-            print('')
 
     def search(self, what, cat='all'):
         cat = cat.lower()
